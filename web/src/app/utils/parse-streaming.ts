@@ -1,4 +1,3 @@
-import { Relate } from "@/app/interfaces/relate";
 import { Source } from "@/app/interfaces/source";
 import { fetchStream } from "@/app/utils/fetch-stream";
 
