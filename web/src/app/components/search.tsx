@@ -27,12 +27,12 @@ export const Search: FC = () => {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           autoFocus
-          placeholder="Ask Lepton AI anything ..."
+          placeholder="Ask me anything ..."
           className="px-2 pr-6 w-full rounded-md flex-1 outline-none bg-white"
         />
         <button
           type="submit"
-          className="w-auto py-1 px-2 bg-black border-black text-white fill-white active:scale-95 border overflow-hidden relative rounded-xl"
+          className="w-auto py-1 px-2 bg-blue-500 text-white fill-white active:scale-95 border overflow-hidden relative rounded-xl"
         >
           <ArrowRight size={16} />
         </button>

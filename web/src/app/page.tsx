@@ -1,5 +1,4 @@
 "use client";
-import { Footer } from "@/app/components/footer";
 import { Logo } from "@/app/components/logo";
 import { PresetQuery } from "@/app/components/preset-query";
 import { Search } from "@/app/components/search";
@@ -12,10 +11,10 @@ export default function Home() {
         <Logo></Logo>
         <Search></Search>
         <div className="flex gap-2 flex-wrap justify-center">
-          <PresetQuery query="Who said live long and prosper?"></PresetQuery>
-          <PresetQuery query="Why do we only see one side of the moon?"></PresetQuery>
+          <PresetQuery query="最近的新闻？"></PresetQuery>
+          <PresetQuery query="OpenAI最新的模型"></PresetQuery>
+          <PresetQuery query="原神有抄袭塞尔达吗"></PresetQuery>
         </div>
-        <Footer></Footer>
       </div>
     </div>
   );

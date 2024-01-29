@@ -11,7 +11,6 @@ export const parseStreaming = async (
   search_uuid: string,
   onSources: (value: Source[]) => void,
   onMarkdown: (value: string) => void,
-  onRelates: (value: Relate[]) => void,
   onError?: (status: number) => void,
 ) => {
   const decoder = new TextDecoder();
@@ -66,13 +65,6 @@ export const parseStreaming = async (
         }
       }
     },
-    () => {
-      const [_, relates] = chunks.split(RELATED_SPLIT);
-      try {
-        onRelates(JSON.parse(relates));
-      } catch (e) {
-        onRelates([]);
-      }
-    },
+    () => {},
   );
 };

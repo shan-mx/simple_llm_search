@@ -12,14 +12,14 @@ const SourceItem: FC<{ source: Source; index: number }> = ({
   const domain = new URL(url).hostname;
   return (
     <div
-      className="relative text-xs py-3 px-3 bg-zinc-100 hover:bg-zinc-200 rounded-lg flex flex-col gap-2"
+      className="relative text-xs py-3 px-3 bg-zinc-100 hover:bg-zinc-200 rounded-lg flex flex-col gap-2 h-24"
       key={id}
     >
       <a href={url} target="_blank" className="absolute inset-0"></a>
-      <div className="font-medium text-zinc-950 text-ellipsis overflow-hidden whitespace-nowrap break-words">
+      <div className="font-medium text-zinc-950 text-ellipsis overflow-hidden break-words line-clamp-3">
         {name}
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center absolute bottom-2">
         <div className="flex-1 overflow-hidden">
           <div className="text-ellipsis whitespace-nowrap break-all text-zinc-400 overflow-hidden w-full">
             {index + 1} - {domain}
@@ -46,7 +46,7 @@ export const Sources: FC<{ sources: Source[] }> = ({ sources }) => {
         </>
       }
       content={
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {sources.length > 0 ? (
             sources.map((item, index) => (
               <SourceItem
@@ -57,7 +57,6 @@ export const Sources: FC<{ sources: Source[] }> = ({ sources }) => {
             ))
           ) : (
             <>
-              <Skeleton className="max-w-sm h-16 bg-zinc-200/80"></Skeleton>
               <Skeleton className="max-w-sm h-16 bg-zinc-200/80"></Skeleton>
               <Skeleton className="max-w-sm h-16 bg-zinc-200/80"></Skeleton>
               <Skeleton className="max-w-sm h-16 bg-zinc-200/80"></Skeleton>
