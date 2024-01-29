@@ -1,4 +1,34 @@
 <div align="center">
+<h1 align="center">Simple LLM Search</h1>
+A simplest conversation-based search demo based on Lepton AI's work.
+</div>
+
+## Supported LLM Providers
+
+- OpenAI
+- Azure
+- ZhipuAI
+
+## Setup
+
+1. Setup Leptonai (We've gonna use its KV)
+```shell
+pip install -U leptonai && lep login
+```
+2. Install SDK of LLM providers you want to use.
+3. Configure your LLM providers' API keys in `secrets.toml`
+4. Build frontend
+```shell
+cd web && npm install && npm run build
+```
+4. Run the server
+```shell
+cd .. && python search_with_lepton.py
+```
+
+***
+
+<div align="center">
 <h1 align="center">Search with Lepton</h1>
 Build your own conversational search engine using less than 500 lines of code.
 <br/>
