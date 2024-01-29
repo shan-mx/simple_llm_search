@@ -11,19 +11,22 @@ A simplest conversation-based search demo based on Lepton AI's work.
 
 ## Setup
 
-1. Setup Leptonai (We've gonna use its KV)
+1. Setup Python Dependencies
 ```shell
-pip install -U leptonai && lep login
+pip3 install leptonai toml zhipuai openai
 ```
-2. Install SDK of LLM providers you want to use.
-3. Configure your LLM providers' API keys in `secrets.toml`
-4. Build frontend
+2. Configure your LLM providers' API keys in `secrets.toml`
+3. Build the frontend
 ```shell
 cd web && npm install && npm run build
 ```
-4. Run the server
+4. Run the backend
 ```shell
-cd .. && python search_with_lepton.py
+cd .. && python3 backend.py
+```
+5. Run the frontend
+```shell
+cd web && export SERVER_URL=http://localhost:8080 & npm run dev
 ```
 
 ***
