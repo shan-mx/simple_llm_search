@@ -1,5 +1,5 @@
 <div align="center">
-<h1 align="center">Simple LLM Search</h1>
+<h1 align="center">Simple LLM Search (in 200 lines)</h1>
 A simplest conversation-based search demo based on Lepton AI's work.
 </div>
 
@@ -16,17 +16,17 @@ A simplest conversation-based search demo based on Lepton AI's work.
 pip3 install leptonai toml zhipuai openai
 ```
 2. Configure your LLM providers' API keys in `secrets.toml`
-3. Build the frontend
+3. Run the backend
+```shell
+python3 backend.py
+```
+4. Build the frontend
 ```shell
 cd web && npm install && npm run build
 ```
-4. Run the backend
-```shell
-cd .. && python3 backend.py
-```
 5. Run the frontend
 ```shell
-cd web && export SERVER_URL=http://localhost:8080 & npm run dev
+export SERVER_URL=http://localhost:8080 & npm run dev
 ```
 
 ***
