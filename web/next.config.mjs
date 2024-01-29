@@ -8,7 +8,7 @@ export default (phase, { defaultConfig }) => {
       output: "export",
       assetPrefix: "/ui/",
       basePath: "/ui",
-      distDir: "../ui"
+      distDir: "/ui"
     };
   } else {
     return {
@@ -16,7 +16,7 @@ export default (phase, { defaultConfig }) => {
         return [
           {
             source: "/query",
-            destination: "http://localhost:8080/query" // Proxy to Backend
+            destination: process.env.SERVER_URL + "/query" // Proxy to Backend
           }
         ];
       }
