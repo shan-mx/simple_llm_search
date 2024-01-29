@@ -164,7 +164,7 @@ class RAG(Photon):
             - query: the user query.
             - search_uuid: a uuid that is used to identify search query.
         """
-        if not search_uuid or query:
+        if not search_uuid or not query:
             raise HTTPException(status_code=400, detail="query and search_uuid must be provided.")
 
         # First, do a search query.
