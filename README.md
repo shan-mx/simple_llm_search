@@ -12,24 +12,31 @@ A simplest conversation-based search demo based on Lepton AI's work.
 ## Setup
 
 1. Setup Python Dependencies
+
 ```shell
-pip3 install leptonai toml zhipuai openai
+pip install fastapi loguru toml zhipuai openai
 ```
+
 2. Configure your LLM providers' API keys in `secrets.toml`
 3. Run the backend
+
 ```shell
-python3 backend.py
+uvicorn backend:app
 ```
+
 4. Build the frontend
+
 ```shell
 cd web && npm install && npm run build
 ```
+
 5. Run the frontend
+   
 ```shell
 export SERVER_URL=http://localhost:8080 & npm run dev
 ```
 
-***
+---
 
 <div align="center">
 <h1 align="center">Search with Lepton</h1>
@@ -40,8 +47,8 @@ Build your own conversational search engine using less than 500 lines of code.
 <img width="70%" src="https://github.com/leptonai/search_with_lepton/assets/1506722/845d7057-02cd-404e-bbc7-60f4bae89680">
 </div>
 
-
 ## Features
+
 - Built-in support for LLM
 - Built-in support for search engine
 - Customizable pretty UI interface
@@ -55,30 +62,32 @@ Build your own conversational search engine using less than 500 lines of code.
 ## Setup LLM and KV
 
 > [!NOTE]
-> We recommend using the built-in llm and kv functions with Lepton. 
+> We recommend using the built-in llm and kv functions with Lepton.
 > Running the following commands to set up them automatically.
 
 ```shell
 pip install -U leptonai && lep login
 ```
 
-
 ## Build
 
 1. Set Bing subscription key
+
 ```shell
 export BING_SEARCH_V7_SUBSCRIPTION_KEY=YOUR_BING_SUBSCRIPTION_KEY
 ```
+
 2. Build web
+
 ```shell
 cd web && npm install && npm run build
 ```
+
 3. Run server
+
 ```shell
 BACKEND=BING python search_with_lepton.py
 ```
-
-
 
 ## Deploy
 
