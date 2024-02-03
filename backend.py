@@ -1,16 +1,16 @@
 import json
 import re
 import threading
-import requests
 import traceback
+from typing import Generator
+
+import openai
+import requests
 import toml
 import zhipuai
-from typing import Generator
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from loguru import logger
-from leptonai.photon import Photon
-
 
 _rag_query_text = """
 You are a smart AI assistant. You are given a user question, and please write clean, concise and accurate answer to the question. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a number. Please use the context and cite the context at the end of each sentence if applicable.
@@ -21,61 +21,36 @@ Here are the set of contexts:
 Remember, don't blindly repeat the contexts verbatim. And here is the user question:
 """
 
-# A set of stop words to use.
-stop_words = []
-
 # Load env secrets from secrets.toml.
 with open("secrets.toml") as f:
     envs = toml.load(f)
 
 
-def search_with_bing(query: str, subscription_key: str):
-    """
-    Search with bing and return the contexts.
-    """
-    params = {"q": query, "mkt": envs["BING_MKT"]}
-    response = requests.get(
-        envs["BING_SEARCH_V7_ENDPOINT"],
-        headers={"Ocp-Apim-Subscription-Key": subscription_key},
-        params=params,
-        timeout=envs["DEFAULT_SEARCH_ENGINE_TIMEOUT"],
-    )
-    if not response.ok:
-        logger.error(f"{response.status_code} {response.text}")
-        raise HTTPException(response.status_code, "Search engine error.")
-    json_content = response.json()
-    try:
-        contexts = json_content["webPages"]["value"][:envs["REFERENCE_COUNT"]]
-    except KeyError:
-        logger.error(f"Error encountered: {json_content}")
-        return []
-    return contexts
+class RAG:
+    def __init__(self):
+        """
+        Initializes rag configs.
+        """
+        self.model = envs["LLM_NAME"]
+        self.backend = envs["SEARCH_BACKEND"]
 
+        if self.backend != "BING":
+            raise RuntimeError("Backend must be BING.")
 
-class RAG(Photon):
-    """
-    Retrieval-Augmented Generation Demo from Lepton AI.
+        self.search_api_key = envs["BING_SEARCH_V7_SUBSCRIPTION_KEY"]
+        self.search_function = lambda query: self.search_with_bing(
+            query,
+            self.search_api_key,
+        )
 
-    This is a minimal example to show how to build a RAG engine with Lepton AI.
-    It uses search engine to obtain results based on user queries, and then uses
-    LLM models to generate the answer as well as related questions.
-    """
-
-    requirement_dependency = [
-        "openai",  # for openai client usage.
-    ]
-
-    # It's just a bunch of api calls, so our own deployment can be made massively
-    # concurrent.
-    handler_max_concurrency = 16
+        logger.info(f"Using model {self.model}.")
+        logger.info(f"Using search backend {self.backend}.")
 
     def local_client(self):
         """
         Gets a thread-local client, so in case openai clients are not thread safe,
         each thread will have its own client.
         """
-        import openai
-
         thread_local = threading.local()
         try:
             return thread_local.client
@@ -96,28 +71,30 @@ class RAG(Photon):
                 )
             return thread_local.client
 
-    def init(self):
+    def search_with_bing(self, query: str, subscription_key: str):
         """
-        Initializes photon configs.
+        Search with bing and return the contexts.
         """
+        params = {"q": query, "mkt": envs["BING_MKT"]}
+        response = requests.get(
+            envs["BING_SEARCH_V7_ENDPOINT"],
+            headers={"Ocp-Apim-Subscription-Key": subscription_key},
+            params=params,
+            timeout=envs["DEFAULT_SEARCH_ENGINE_TIMEOUT"],
+        )
+        if not response.ok:
+            logger.error(f"{response.status_code} {response.text}")
+            raise HTTPException(response.status_code, "Search engine error.")
+        json_content = response.json()
+        try:
+            contexts = json_content["webPages"]["value"][:envs["REFERENCE_COUNT"]]
+        except KeyError:
+            logger.error(f"Error encountered: {json_content}")
+            return []
+        return contexts
 
-        self.backend = envs["SEARCH_BACKEND"]
-        self.model = envs["LLM_NAME"]
-
-        if self.backend == "BING":
-            self.search_api_key = envs["BING_SEARCH_V7_SUBSCRIPTION_KEY"]
-            self.search_function = lambda query: search_with_bing(
-                query,
-                self.search_api_key,
-            )
-        else:
-            raise RuntimeError("Backend must be BING.")
-
-        logger.info(f"Using model {self.model}.")
-        logger.info(f"Using search backend {self.backend}.")
-
-    def _raw_stream_response(
-            self, contexts, llm_response
+    def return_stream_response(
+        self, contexts, llm_response
     ) -> Generator[str, None, None]:
         """
         A generator that yields the raw stream response. You do not need to call
@@ -137,25 +114,10 @@ class RAG(Photon):
             if chunk.choices:
                 yield chunk.choices[0].delta.content or ""
 
-    def return_stream_response(
-            self, contexts, llm_response, search_uuid
-    ) -> Generator[str, None, None]:
-        """
-        Streams the result.
-        """
-        # First, stream and yield the results.
-        all_yielded_results = []
-        for result in self._raw_stream_response(
-                contexts, llm_response
-        ):
-            all_yielded_results.append(result)
-            yield result
-
-    @Photon.handler(method="POST", path="/query")
     def query_function(
-            self,
-            query: str,
-            search_uuid: str,
+        self,
+        query: str,
+        search_uuid: str,
     ) -> StreamingResponse:
         """
         Query the search engine and returns the response.
@@ -165,17 +127,18 @@ class RAG(Photon):
             - search_uuid: a uuid that is used to identify search query.
         """
         if not search_uuid or not query:
-            raise HTTPException(status_code=400, detail="query and search_uuid must be provided.")
+            raise HTTPException(
+                status_code=400, detail="query and search_uuid must be provided."
+            )
 
-        # First, do a search query.
-        query = query
         # Basic attack protection: remove "[INST]" or "[/INST]" from the query
         query = re.sub(r"\[/?INST]", "", query)
         contexts = self.search_function(query)
 
         system_prompt = _rag_query_text.format(
             context="\n\n".join(
-                [f"[[citation:{i + 1}]] {c['snippet']}" for i, c in enumerate(contexts)]
+                [f"[[citation:{i + 1}]] {c['snippet']}" for i,
+                    c in enumerate(contexts)]
             )
         )
         try:
@@ -188,7 +151,6 @@ class RAG(Photon):
                     {"role": "user", "content": query},
                 ],
                 max_tokens=1024,
-                stop=stop_words,
                 stream=True,
                 temperature=0.9,
             )
@@ -198,12 +160,19 @@ class RAG(Photon):
 
         return StreamingResponse(
             self.return_stream_response(
-                contexts, llm_response, search_uuid
+                contexts, llm_response
             ),
             media_type="text/html",
         )
 
 
-if __name__ == "__main__":
-    rag = RAG()
-    rag.launch()
+app = FastAPI()
+rag = RAG()
+
+
+@app.post("/query")
+async def query_handler(request: Request):
+    data = await request.json()
+    query = data.get("query")
+    search_uuid = data.get("search_uuid")
+    return rag.query_function(query, search_uuid)
