@@ -33,7 +33,7 @@ cd web && npm install && npm run build
 5. Run the frontend
    
 ```shell
-export SERVER_URL=http://localhost:8080 & npm run dev
+export SERVER_URL=http://localhost:8000 & npm run dev
 ```
 
 ---
